@@ -257,7 +257,7 @@ function loop() {
             if (tetromino.matrix[row][col]) {
                 const shadowX = (tetromino.col + col) * grid;
                 const shadowY = (shadowRow + row) * grid;
-                context.fillStyle = 'rgba(0, 0, 0, 0.2)';
+                context.fillStyle = 'rgba(255, 255, 255, 0.2)';
                 context.fillRect(shadowX, shadowY, grid - 1, grid - 1);
             }
         }
@@ -373,12 +373,22 @@ function randomMovement() {
     moves[randomIndex]();
 };
 
-// Call the function every Xms
-function runBudgetAI() {
-    //speed = 60;
-    //setInterval(randomMovement, 100);
-    setInterval(betterAI(), 200);
-};
+let running = 0;
+
+function runningAI(){
+    running = !running;
+  if (running) {
+    betterAI();
+  }
+}
+
+// // Call the function every Xms
+// function runBudgetAI() {
+//     if (running) {
+//         alert(running);
+//         setInterval(function(){betterAI()}, 100);
+//       }
+// };
 
 const lowPositions = [];
 
@@ -434,9 +444,12 @@ function betterAI() {
         tetromino.col = newCol;
         tetromino.matrix = newMatrix;
     }
-    setTimeout(function () {
-        betterAI();
-    }, 100);
+    if(running){
+        setTimeout(function () {
+            betterAI();
+        }, 500);
+    }
+    
 };
 
 const endPositions = [];
