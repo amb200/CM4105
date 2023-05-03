@@ -72,6 +72,7 @@ function placeTetromino() {
                 // game over if piece has any part offscreen
                 if (tetromino.row + row < 0) {
                     return showGameOver();
+
                 }
 
                 playfield[tetromino.row + row][tetromino.col + col] = tetromino.name;
@@ -85,13 +86,10 @@ function placeTetromino() {
             //increase the score with every line clear and increase the speed of the game
             score += 1;
             scoreDisplay.innerHTML = "Score " + score;
-            if (speed > 30) {
-                speed -= 30;
+            if (speed >= 30) {
+                speed -= 10;
             }
-            if (speed = 30) {
-                speed -= 15;
-            }
-            alert(speed);
+            //alert(speed);
 
             // drop every row above this one
             for (let r = row; r >= 0; r--) {
@@ -375,37 +373,70 @@ function randomMovement() {
     moves[randomIndex]();
 };
 
-// Call the function every 100ms
+// Call the function every Xms
 function runBudgetAI() {
-    speed = 60;
+    //speed = 60;
     //setInterval(randomMovement, 100);
-    setInterval(betterAI(), 5000);
+    setInterval(betterAI(), 200);
 };
 
+const lowPositions = [];
 
 function betterAI() {
     getEndPositions();
-    height = 18;
+    //reset low position array
+    lowPositions.length = 0;
 
+    height = 0;
+    leftMost = 10;
 
-    for(i = 0; i < endPositions.length-1;i++){
-        if(height > endPositions[i][0]){
-            endPositions.splice(i,1);
-            console.log("height is now " + endPositions[i][0])
+    for (i = 0; i < endPositions.length - 1; i++) {
+        if (height < endPositions[i][0]) {
+            height = endPositions[i][0];
         }
     }
 
 
-    const randomIndex = Math.floor(Math.random() * endPositions.length - 1);
-    newRow = endPositions[randomIndex][0];
-    newCol = endPositions[randomIndex][1];
-    newMatrix = endPositions[randomIndex][2];
+    for (i = 0; i < endPositions.length - 1; i++) {
+        if (height == endPositions[i][0]) {
+            lowPositions.push([endPositions[i][0], endPositions[i][1], endPositions[i][2]]);
+           // console.log(endPositions[i]);
+           // console.log(lowPositions);
+        }
+    }
+
+    for (i = 0; i < lowPositions.length - 1; i++) {
+        if (leftMost > lowPositions[i][1]) {
+            leftMost = lowPositions[i][1];
+        }
+    }
+    for (i = 0; i < lowPositions.length - 1; i++) {
+        if (leftMost == lowPositions[i][1]) {
+            lowPositions.splice(i, 1);
+            //console.log(lowPositions);
+        }
+    }
+
+    const randomIndex = Math.floor(Math.random() * lowPositions.length);
+    try {
+        newRow = lowPositions[randomIndex][0];
+        newCol = lowPositions[randomIndex][1];
+        newMatrix = lowPositions[randomIndex][2];
+    } catch (error) {
+        setTimeout(function () {
+            betterAI();
+        }, 500);
+    }
+
 
     if (isValidMove(newMatrix, newRow, newCol)) {
         tetromino.row = newRow;
         tetromino.col = newCol;
         tetromino.matrix = newMatrix;
     }
+    setTimeout(function () {
+        betterAI();
+    }, 100);
 };
 
 const endPositions = [];
@@ -414,24 +445,26 @@ function getEndPositions() {
     //reset end position array
     endPositions.length = 0;
 
+
     for (i = 0; i <= 4; i++) {
         matrix = rotate(clonePiece.matrix);
         if (isValidMove(matrix, clonePiece.row, clonePiece.col)) {
             clonePiece.matrix = matrix;
-        }
-        // Iterate through each column on the board
-        for (let col = 0; col < playfield[0].length; col++) {
-            let row = -1;
-            // Find the lowest empty cell in the current column
-            while (isValidMove(clonePiece.matrix, row + 1, col)) {
-                row++;
-            }
-            //adds possible positions to the endPositions array
-            if (row > 0) {
-                endPositions.push([row, col, clonePiece.matrix]);
-            }
+            // Iterate through each column on the board
+            for (let col = 0; col < playfield[0].length; col++) {
+                let row = -1;
+                // Find the lowest empty cell in the current column
+                while (isValidMove(clonePiece.matrix, row + 1, col)) {
+                    row++;
+                }
+                //adds possible positions to the endPositions array
+                if (row >= 0) {
+                    endPositions.push([row, col, clonePiece.matrix]);
+                }
 
+            }
         }
+
     };
-    console.log(endPositions);
+    //console.log(endPositions);
 };
